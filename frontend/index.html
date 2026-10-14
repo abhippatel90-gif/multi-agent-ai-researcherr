@@ -1,0 +1,432 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Studio | Multi-Agent AI</title>
+<style>
+:root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --text: #172033;
+    --muted: #687386;
+    --line: #e5e9f1;
+    --accent: #5146e5;
+    --accent-light: #eeedff;
+    --green: #15803d;
+    --red: #b91c1c;
+    --shadow: 0 8px 28px rgba(25, 35, 60, .05);
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+button, input { font: inherit; }
+button { cursor: pointer; }
+.layout { min-height: 100vh; display: flex; }
+.sidebar {
+    width: 235px;
+    background: #171b2d;
+    color: white;
+    padding: 26px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+.brand { font-size: 18px; font-weight: 750; line-height: 1.4; }
+.brand span { color: #aaa5ff; }
+.brand small { display: block; color: #a8afc2; font-size: 11px; font-weight: 400; margin-top: 5px; }
+.nav-label {
+    color: #929bb1; font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; margin: 0 10px 10px;
+}
+.nav-item {
+    padding: 12px 11px; border-radius: 9px;
+    color: #d6d9e5; font-size: 13px; margin-bottom: 5px;
+}
+.nav-item.active { background: #302c55; color: white; }
+.sidebar-note {
+    margin-top: auto; border: 1px solid #353a50; border-radius: 12px;
+    padding: 13px; color: #bfc5d6; font-size: 12px; line-height: 1.6;
+}
+main { flex: 1; min-width: 0; padding: 32px clamp(18px, 4vw, 52px); }
+.topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 15px; margin-bottom: 28px;
+}
+.eyebrow { color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; }
+h1 { font-size: clamp(25px, 3vw, 34px); margin: 7px 0; letter-spacing: -.8px; }
+.subtitle { color: var(--muted); font-size: 14px; }
+.status-pill {
+    background: #e8f7ed; color: var(--green); border-radius: 999px;
+    padding: 8px 12px; font-size: 12px; white-space: nowrap;
+}
+.stats {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px; margin-bottom: 22px;
+}
+.stat, .panel {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 15px; box-shadow: var(--shadow);
+}
+.stat { padding: 19px; }
+.stat-label { color: var(--muted); font-size: 12px; }
+.stat-value { font-size: 29px; font-weight: 750; margin-top: 10px; }
+.panel { padding: 24px; margin-bottom: 22px; }
+.panel-heading {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; margin-bottom: 17px;
+}
+h2 { margin: 0; font-size: 17px; }
+.panel-subtitle { color: var(--muted); font-size: 12px; margin-top: 5px; }
+.form-row { display: flex; gap: 10px; }
+input {
+    width: 100%; min-width: 0; border: 1px solid #dce1ec;
+    border-radius: 9px; padding: 13px 14px; outline: none;
+    background: white; color: var(--text);
+}
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #5146e51a; }
+.primary {
+    background: var(--accent); color: white; border: 0;
+    border-radius: 9px; padding: 12px 17px; font-weight: 650;
+    white-space: nowrap;
+}
+.primary:disabled { opacity: .6; cursor: wait; }
+.secondary {
+    background: white; border: 1px solid var(--line);
+    color: var(--text); border-radius: 8px; padding: 8px 11px; font-size: 12px;
+}
+.notice { color: var(--muted); font-size: 12px; margin-top: 12px; line-height: 1.5; }
+.message { display: none; margin-top: 14px; padding: 12px; border-radius: 8px; font-size: 13px; }
+.message.show { display: block; }
+.message.error { background: #fff0f0; color: var(--red); }
+.message.success { background: #edf9f0; color: var(--green); }
+.table-wrap { width: 100%; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th {
+    font-size: 10px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .8px; padding: 12px 10px; border-bottom: 1px solid var(--line);
+}
+td { font-size: 12px; padding: 14px 10px; border-bottom: 1px solid #edf0f5; vertical-align: middle; }
+.topic-cell { min-width: 180px; max-width: 310px; font-weight: 650; line-height: 1.5; overflow-wrap: anywhere; }
+.date-cell { white-space: nowrap; color: var(--muted); }
+.status {
+    display: inline-block; border-radius: 999px; padding: 5px 8px;
+    font-size: 10px; background: #eef1f6; color: #475569; white-space: nowrap;
+}
+.status.completed { background: #e8f7ed; color: var(--green); }
+.status.failed { background: #fff0f0; color: var(--red); }
+.status.running { background: #fff4dd; color: #915c00; }
+.actions { display: flex; gap: 5px; flex-wrap: wrap; }
+.empty { color: var(--muted); text-align: center; padding: 35px 10px; font-size: 13px; }
+.report-preview {
+    display: none; margin-top: 20px; border: 1px solid var(--line);
+    border-radius: 10px; padding: 17px; background: #fafbff;
+}
+.report-preview.open { display: block; }
+.report-preview pre {
+    white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit;
+    font-size: 12px; line-height: 1.75; max-height: 450px; overflow: auto;
+}
+.footer { color: var(--muted); font-size: 11px; text-align: center; padding: 8px; }
+@media (max-width: 850px) {
+    .sidebar { width: 185px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+    .layout { display: block; }
+    .sidebar { width: 100%; padding: 15px 18px; gap: 13px; }
+    .sidebar-note, .nav-label { display: none; }
+    .nav-item { display: inline-block; margin: 0 4px 0 0; padding: 8px 10px; }
+    main { padding: 22px 14px; }
+    .topbar { align-items: flex-start; }
+    .status-pill { font-size: 10px; }
+    .form-row { flex-direction: column; }
+    .panel { padding: 17px; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">Research<span>Studio</span><small>MULTI-AGENT AI WORKSPACE</small></div>
+        <div>
+            <div class="nav-label">WORKSPACE</div>
+            <div class="nav-item active">▦ &nbsp; Dashboard</div>
+            <div class="nav-item">◎ &nbsp; Research runs</div>
+        </div>
+        <div class="sidebar-note">
+            <strong>Local AI engine</strong><br>
+            Powered by Ollama, five research agents, and PostgreSQL.
+        </div>
+    </aside>
+
+    <main>
+        <div class="topbar">
+            <div>
+                <div class="eyebrow">RESEARCH WORKSPACE</div>
+                <h1>Your research dashboard</h1>
+                <div class="subtitle">Generate reports and manage your research history.</div>
+            </div>
+            <div class="status-pill" id="connectionStatus">Checking connection...</div>
+        </div>
+
+        <section class="stats">
+            <div class="stat"><div class="stat-label">Total runs</div><div class="stat-value" id="totalRuns">—</div></div>
+            <div class="stat"><div class="stat-label">Completed</div><div class="stat-value" id="completedRuns">—</div></div>
+            <div class="stat"><div class="stat-label">In progress</div><div class="stat-value" id="activeRuns">—</div></div>
+            <div class="stat"><div class="stat-label">Failed</div><div class="stat-value" id="failedRuns">—</div></div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Start new research</h2>
+                    <div class="panel-subtitle">Choose a topic for your five-agent research pipeline.</div>
+                </div>
+            </div>
+            <form id="researchForm">
+                <div class="form-row">
+                    <input id="topicInput" name="topic" maxlength="300"
+                        placeholder="e.g. Artificial Intelligence in Healthcare"
+                        minlength="3" required>
+                    <button class="primary" id="startButton" type="submit">Start research →</button>
+                </div>
+            </form>
+            <div class="notice">Research runs locally using your configured Ollama model. Longer topics may take several minutes to process.</div>
+            <div id="formMessage" class="message" role="status"></div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Research history</h2>
+                    <div class="panel-subtitle">Previous runs saved in PostgreSQL.</div>
+                </div>
+                <button class="secondary" id="refreshButton" type="button">↻ Refresh</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Topic</th><th>Status</th><th>Created</th><th>Reports</th></tr></thead>
+                    <tbody id="runsBody">
+                        <tr><td colspan="4" class="empty">Loading research history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="reportPreview" class="report-preview">
+                <div class="panel-heading">
+                    <h2 id="previewTitle">Report preview</h2>
+                    <button type="button" class="secondary" id="closePreview">Close</button>
+                </div>
+                <pre id="previewText"></pre>
+            </div>
+        </section>
+        <div class="footer">ResearchStudio · Local AI research · PostgreSQL history</div>
+    </main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let refreshTimer = null;
+
+function showMessage(text, type) {
+    const el = $("formMessage");
+    el.textContent = text;
+    el.className = "message show " + type;
+}
+
+function escapeText(value) {
+    return String(value ?? "");
+}
+
+function formatDate(value) {
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleString();
+}
+
+function statusClass(status) {
+    if (status === "completed") return "completed";
+    if (status === "failed") return "failed";
+    if (status && status !== "started") return "running";
+    return "";
+}
+
+function friendlyStatus(status) {
+    const names = {
+        started: "Queued",
+        running_manager: "Manager agent",
+        running_research: "Research agent",
+        running_analysis: "Analysis agent",
+        running_fact_check: "Fact-check agent",
+        running_writer: "Writer agent",
+        completed: "Completed",
+        failed: "Failed"
+    };
+    return names[status] || status || "Unknown";
+}
+
+async function api(path, options = {}) {
+    const response = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(data.detail || "Request failed.");
+    }
+    return data;
+}
+
+async function refreshDashboard() {
+    try {
+        const [stats, runs] = await Promise.all([
+            api("/api/stats"),
+            api("/api/runs")
+        ]);
+
+        $("connectionStatus").textContent = "● Database connected";
+        $("totalRuns").textContent = stats.total ?? 0;
+        $("completedRuns").textContent = stats.completed ?? 0;
+        $("activeRuns").textContent = stats.active ?? 0;
+        $("failedRuns").textContent = stats.failed ?? 0;
+
+        const body = $("runsBody");
+        body.replaceChildren();
+
+        if (!runs.length) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 4;
+            cell.className = "empty";
+            cell.textContent = "No research runs yet. Start your first one above.";
+            row.appendChild(cell);
+            body.appendChild(row);
+            return;
+        }
+
+        for (const run of runs) {
+            const row = document.createElement("tr");
+
+            const topicCell = document.createElement("td");
+            topicCell.className = "topic-cell";
+            topicCell.textContent = run.topic;
+
+            const statusCell = document.createElement("td");
+            const badge = document.createElement("span");
+            badge.className = "status " + statusClass(run.status);
+            badge.textContent = friendlyStatus(run.status);
+            statusCell.appendChild(badge);
+
+            const dateCell = document.createElement("td");
+            dateCell.className = "date-cell";
+            dateCell.textContent = formatDate(run.created_at);
+
+            const actionsCell = document.createElement("td");
+            const actions = document.createElement("div");
+            actions.className = "actions";
+
+            const viewButton = document.createElement("button");
+            viewButton.className = "secondary";
+            viewButton.textContent = "View";
+            viewButton.addEventListener("click", () => viewReport(run.id));
+
+            actions.appendChild(viewButton);
+
+            if (run.status === "completed") {
+                for (const [format, label] of [
+                    ["pdf", "PDF"], ["docx", "Word"], ["md", "MD"]
+                ]) {
+                    const link = document.createElement("a");
+                    link.href = `/api/runs/${run.id}/download/${format}`;
+                    link.textContent = label;
+                    link.className = "secondary";
+                    link.style.textDecoration = "none";
+                    link.style.display = "inline-block";
+                    link.style.padding = "8px 9px";
+                    actions.appendChild(link);
+                }
+            }
+
+            actionsCell.appendChild(actions);
+            row.append(topicCell, statusCell, dateCell, actionsCell);
+            body.appendChild(row);
+        }
+    } catch (error) {
+        $("connectionStatus").textContent = "● Connection issue";
+        $("connectionStatus").style.background = "#fff0f0";
+        $("connectionStatus").style.color = "#b91c1c";
+        $("runsBody").replaceChildren();
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 4;
+        cell.className = "empty";
+        cell.textContent = error.message + " Check that the API server is running.";
+        row.appendChild(cell);
+        $("runsBody").appendChild(row);
+    }
+}
+
+async function viewReport(id) {
+    try {
+        const run = await api(`/api/runs/${id}`);
+        $("previewTitle").textContent = `Run #${run.id}: ${run.topic}`;
+        $("previewText").textContent =
+            run.final_report ||
+            run.error_message ||
+            `Current stage: ${friendlyStatus(run.status)}\n\nThe final report will appear here when the run completes.`;
+        $("reportPreview").classList.add("open");
+        $("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+$("researchForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const topic = $("topicInput").value.trim();
+    if (topic.length < 3) {
+        showMessage("Please enter a topic with at least 3 characters.", "error");
+        return;
+    }
+
+    $("startButton").disabled = true;
+    $("startButton").textContent = "Starting...";
+    showMessage("Submitting your research topic...", "success");
+
+    try {
+        const result = await api("/api/research", {
+            method: "POST",
+            body: JSON.stringify({ topic })
+        });
+
+        showMessage(
+            `Research run #${result.id} started. Progress will update automatically.`,
+            "success"
+        );
+        $("topicInput").value = "";
+        await refreshDashboard();
+    } catch (error) {
+        showMessage(error.message, "error");
+    } finally {
+        $("startButton").disabled = false;
+        $("startButton").textContent = "Start research →";
+    }
+});
+
+$("refreshButton").addEventListener("click", refreshDashboard);
+$("closePreview").addEventListener("click", () => {
+    $("reportPreview").classList.remove("open");
+});
+
+refreshDashboard();
+refreshTimer = setInterval(refreshDashboard, 4000);
+</script>
+</body>
+</html>
